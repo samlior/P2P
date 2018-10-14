@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\p2p\P2PClient.cpp">
+      <Filter>p2p</Filter>
+    </ClCompile>
+    <ClCompile Include="..\p2p\P2PMessage.cpp">
+      <Filter>p2p</Filter>
+    </ClCompile>
+    <ClCompile Include="..\p2p\UDPSocket.cpp">
+      <Filter>p2p</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utils\ThreadBase.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="p2p">
+      <UniqueIdentifier>{a893baa2-20c2-407f-8026-479aee76aaec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{30b3b571-45ab-4372-99ae-ec3670d47bf4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\p2p\P2PClient.h">
+      <Filter>p2p</Filter>
+    </ClInclude>
+    <ClInclude Include="..\p2p\P2PMessage.h">
+      <Filter>p2p</Filter>
+    </ClInclude>
+    <ClInclude Include="..\p2p\UDPSocket.h">
+      <Filter>p2p</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utils\ThreadBase.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
