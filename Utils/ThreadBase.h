@@ -8,9 +8,10 @@ public:
 	CThreadBase() :m_pThread(nullptr), m_bIsRunning(false), m_bNeedRunning(false) {}
 	virtual ~CThreadBase() { stop(); }
 
-	void start();
-	void stop();
+	virtual void start();
+	virtual void stop();
 	bool isRunning();
+	std::thread* getThread() { return m_pThread; }
 
 protected:
 	virtual bool run() { return false; }

@@ -2,17 +2,22 @@
 #include <map>
 #include <mutex>
 
-
 template<typename TKey, typename TValue>
 class CThSfMap
 {
 public:
 	CThSfMap(std::map<TKey, TValue>* pContainer) :m_pThSfMapContainer(pContainer) {}
 	CThSfMap() :m_pThSfMapContainer(new std::map<TKey, TValue>) {}
-	~CThSfMap()
+	virtual ~CThSfMap()
 	{
 		delete m_pThSfMapContainer;
 		m_pThSfMapContainer = nullptr;
+	}
+
+	size_t size()
+	{
+		std::lock_guard<std::mutex> lock(m_mtxThSfMap);
+		return m_pThSfMapContainer->size();
 	}
 
 	void add(const TKey& key, const TValue& value) { add(std::pair<TKey, TValue>(key, value)); }
@@ -83,7 +88,7 @@ public:
 		return bRet;
 	}
 
-	bool find(const TValue& value)
+	bool findByValue(const TValue& value)
 	{
 		bool bRet = false;
 		if (!m_pThSfMapContainer->empty())
@@ -94,14 +99,13 @@ public:
 				if (itr->second == value)
 				{
 					bRet = true;
-					break;
 				}
 			}
 		}
 		return bRet;
 	}
 
-	bool find(const TValue& value, TKey& key)
+	bool findByValue(const TValue& value, TKey& key)
 	{
 		bool bRet = false;
 		if (!m_pThSfMapContainer->empty())
@@ -111,13 +115,18 @@ public:
 			{
 				if (itr->second == value)
 				{
-					bRet = true;
 					key = itr->first;
-					break;
+					bRet = true;
 				}
 			}
 		}
 		return bRet;
+	}
+
+	void clear()
+	{
+		std::lock_guard<std::mutex> lock(m_mtxThSfMap);
+		m_pThSfMapContainer->clear();
 	}
 
 protected:

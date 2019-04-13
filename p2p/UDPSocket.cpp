@@ -15,10 +15,6 @@
 using namespace std;
 using namespace boost;
 
-
-
-
-
 void CEndPoint::convertToAddr(sockaddr_in* pAddr) const
 {
 	memset(pAddr, 0, sizeof (*pAddr));
@@ -44,28 +40,29 @@ CEndPoint::CEndPoint(sockaddr_in* pAddr) :
 CEndPoint::CEndPoint(const std::string& strAddrInfo) :
 	iPort(0)
 {
+	convertFromStr(strAddrInfo);
+}
+
+void CEndPoint::convertFromStr(const std::string& strAddrInfo)
+{
 	size_t pos = strAddrInfo.find(':');
 	if (pos == string::npos)
 	{
-		throw CEndPointConvertError("end point convert error : " + strAddrInfo);
+		throw CEndPointConvertError("end point convert error, missing ':' : " + strAddrInfo);
 	}
-	
+
 	strIP = strAddrInfo.substr(0, pos);
 	if (strAddrInfo.size() < pos + 1)
 	{
-		throw CEndPointConvertError("end point convert error : " + strAddrInfo);
+		throw CEndPointConvertError("end point convert error, error length : " + strAddrInfo);
 	}
 
 	iPort = atoi(strAddrInfo.substr(pos + 1).c_str());
-	if (!iPort)
+	if (iPort < 1 || iPort > 65535)
 	{
-		throw CEndPointConvertError("end point convert error : " + strAddrInfo);
+		throw CEndPointConvertError("end point convert error, convert type : " + strAddrInfo);
 	}
 }
-
-
-
-
 
 
 
@@ -149,7 +146,6 @@ bool CUDPSocket::stopRecvfrom()
 	return true;
 }
 
-
 bool CUDPSocket::run()
 {
 	int iMaxFd = m_iSock + 1;
@@ -178,7 +174,6 @@ bool CUDPSocket::run()
 	return true;
 }
 
-
 bool CUDPSocket::sendto(const char* pIP, int iPort, const char* pData)
 {
 	return sendto(CEndPoint(pIP, iPort), pData);
@@ -203,8 +198,6 @@ bool CUDPSocket::sendto(sockaddr_in* pAddr, const char* pData)
 
 
 
-
-
 bool CUDPAliveKeeper::run()
 {
 	if (m_funcCallBack)
@@ -215,8 +208,6 @@ bool CUDPAliveKeeper::run()
 	}
 	return CThreadBase::threadSleep(m_llSleepTime);
 }
-
-
 
 
 

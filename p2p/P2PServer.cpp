@@ -5,9 +5,7 @@
 using namespace std;
 using namespace boost;
 
-
-
-bool CP2PServerDataSource::parsePunchTargetAddr(CP2PServer* pServer, CP2PMessage* pMessage, CEndPoint*& pEndpoint)
+bool CP2PServerDataSource::parsePunchTargetAddr(CP2PServer* pServer, const CP2PMessage* pMessage, CEndPoint& endpoint)
 {
 	const char* pCustomData = pMessage->getCustomData();
 	bool bRet = false;
@@ -15,7 +13,7 @@ bool CP2PServerDataSource::parsePunchTargetAddr(CP2PServer* pServer, CP2PMessage
 	{
 		try
 		{
-			pEndpoint = new CEndPoint(pCustomData);
+			endpoint.convertFromStr(pCustomData);
 			bRet = true;
 		}
 		catch (const CEndPointConvertError&)
@@ -26,23 +24,9 @@ bool CP2PServerDataSource::parsePunchTargetAddr(CP2PServer* pServer, CP2PMessage
 	return bRet;
 }
 
-bool CP2PServerDataSource::parsePunchTargetAddr(CP2PServer* pServer, const CP2PMessagePtr& ptr, CEndPoint*& pEndpoint)
+bool CP2PServerDataSource::parsePunchTargetAddr(CP2PServer* pServer, const CP2PMessagePtr& ptr, CEndPoint& endpoint)
 {
-	const char* pCustomData = ptr->getCustomData();
-	bool bRet = false;
-	if (pCustomData)
-	{
-		try
-		{
-			pEndpoint = new CEndPoint(pCustomData);
-			bRet = true;
-		}
-		catch (const CEndPointConvertError&)
-		{
-			//etc...
-		}
-	}
-	return bRet;
+	return parsePunchTargetAddr(pServer, ptr.get(), endpoint);
 }
 
 
@@ -68,18 +52,14 @@ CP2PMessage* CP2PServerDataSource::createPunchMessage(CP2PServer* pServer, const
 
 CP2PMessage* CP2PServerDataSource::createLoginSuccessMessage(CP2PServer* pServer, long long llLoginId)
 {
-	format f("%lld");
-	f % llLoginId;
-	return CP2PMessage::createMessageWithCustomData(P2P_MSG_TYPE_LOGIN_SUCCESS, f.str().c_str(), f.str().size());
+	string strLoginId = to_string(llLoginId);
+	return CP2PMessage::createMessageWithCustomData(P2P_MSG_TYPE_LOGIN_SUCCESS, strLoginId.c_str(), strLoginId.size());
 }
 
 CP2PMessage* CP2PServerDataSource::createDataMessage(CP2PServer* pServer, const CEndPoint& endpoint, const string& strData)
 {
 	return CP2PMessage::createMessageWithCustomData(P2P_MSG_TYPE_DATA, strData.c_str(), strData.size());
 }
-
-
-
 
 
 
@@ -110,7 +90,7 @@ bool CP2PServer::send(const string& strTarAddr, const string& strData)
 	return false;
 }
 
-bool CP2PServer::sendto(const CEndPoint& endpoint, CP2PMessage* pMessage)
+bool CP2PServer::sendto(const CEndPoint& endpoint, const CP2PMessage* pMessage)
 {
 	return CUDPStaticSocket::sendto(endpoint, pMessage->getData());
 }
@@ -134,7 +114,7 @@ void CP2PServer::recvData(const char* pData, size_t iLen, sockaddr_in* pAddr)
 
 	CEndPoint epFrom(pAddr);
 	long long llClientLoginId = 0;
-	bool bLogin = CContainer::find(epFrom, llClientLoginId);
+	bool bLogin = CContainer::findByValue(epFrom, llClientLoginId);
 
 	switch (ptr->getType())
 	{
@@ -163,21 +143,15 @@ void CP2PServer::recvData(const char* pData, size_t iLen, sockaddr_in* pAddr)
 	case P2P_MSG_TYPE_PUNCH:
 		if (bLogin)
 		{
-			CEndPoint* pTarClient = nullptr;
-			if (m_pDataSource->parsePunchTargetAddr(this, ptr, pTarClient))
+			CEndPoint tarClient;
+			if (m_pDataSource->parsePunchTargetAddr(this, ptr, tarClient))
 			{
 				if (!m_pDelegate ||
-					m_pDelegate->onClientPunch(this, *pTarClient, llClientLoginId, *pTarClient))
+					m_pDelegate->onClientPunch(this, epFrom, llClientLoginId, tarClient))
 				{
 					CP2PMessagePtr ptrPunch(m_pDataSource->createPunchMessage(this, epFrom.convertToStr()));
-					sendto(*pTarClient, ptrPunch);
+					sendto(tarClient, ptrPunch);
 				}
-			}
-
-			if (pTarClient)
-			{
-				delete pTarClient;
-				pTarClient = nullptr;
 			}
 		}
 		break;

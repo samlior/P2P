@@ -5,12 +5,10 @@
 
 struct sockaddr_in;
 
-
-
 class CEndPointConvertError
 {
 public:
-	CEndPointConvertError(const std::string& str) :strError(str) {}
+	CEndPointConvertError(const std::string& str) noexcept :strError(str) {}
 	std::string strError;
 };
 
@@ -19,6 +17,7 @@ struct CEndPoint
 	std::string strIP;
 	int iPort;
 
+	void convertFromStr(const std::string& strAddrInfo);
 	void convertToAddr(sockaddr_in* pAddr) const;
 	std::string convertToStr() const;
 
@@ -27,25 +26,27 @@ struct CEndPoint
 	CEndPoint(const std::string& strOuterIP, int iOuterPort) :
 		strIP(strOuterIP),
 		iPort(iOuterPort) {}
+
 	CEndPoint(const CEndPoint& endpoint) :
 		strIP(endpoint.strIP),
 		iPort(endpoint.iPort) {}
+
+	CEndPoint() :iPort(0) {}
+
 	CEndPoint(sockaddr_in* pAddr);
+
 	CEndPoint(const std::string& strAddrInfo);
 };
 
 
 
-
-
-
-using CUDPSocketRecvfromCallBack = std::function<void(const char*, size_t, sockaddr_in*)>;
-
 class CUDPSocket : public CThreadBase
 {
 public:
+	using CUDPSocketRecvfromCallBack = std::function<void(const char*, size_t, sockaddr_in*)>;
+
 	CUDPSocket() :m_funcCallBack(nullptr), m_iSock(0) {}
-	~CUDPSocket();
+	virtual ~CUDPSocket();
 
 	void setRecvfromCallBack(CUDPSocketRecvfromCallBack func) { m_funcCallBack = func; }
 
@@ -78,8 +79,6 @@ protected:
 
 
 
-
-
 class CUDPStaticSocket : public CUDPSocket
 {
 public:
@@ -97,12 +96,11 @@ protected:
 
 
 
-
-using CUDPAliveKeeperAppendDataCallBack = std::function<void(const CEndPoint&, std::string&)>;
-
 class CUDPAliveKeeper : public CThreadBase
 {
 public:
+	using CUDPAliveKeeperAppendDataCallBack = std::function<void(const CEndPoint&, std::string&)>;
+
 	CUDPAliveKeeper(CUDPSocket* pSocket, const std::string& strIP, int iPort) :
 		m_pSocket(pSocket), 
 		m_llSleepTime(5000), 
@@ -124,10 +122,7 @@ public:
 
 protected:
 	long long m_llSleepTime;
-
 	CEndPoint m_epServer;
-
 	CUDPSocket* m_pSocket;
-
 	CUDPAliveKeeperAppendDataCallBack m_funcCallBack;
 };

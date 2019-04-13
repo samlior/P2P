@@ -3,9 +3,7 @@
 #include "P2PMessage.h"
 #include "Utils/ThSfMap.h"
 
-
 class CP2PServer;
-
 
 class CP2PServerDelegate
 {
@@ -31,6 +29,7 @@ public:
 };
 
 
+
 class CP2PServerDataSource
 {
 public:
@@ -45,10 +44,12 @@ public:
 	virtual CP2PMessage* createDataMessage(CP2PServer* pServer, const CEndPoint& endpoint, const std::string& strData);
 
 	//解析来自客户端的punch消息的回调
-	//warnning : it will new a ptr
-	virtual bool parsePunchTargetAddr(CP2PServer* pServer, CP2PMessage* pMessage, CEndPoint*& pEndpoint);
-	virtual bool parsePunchTargetAddr(CP2PServer* pServer, const CP2PMessagePtr& ptr, CEndPoint*& pEndpoint);
+	virtual bool parsePunchTargetAddr(CP2PServer* pServer, const CP2PMessage* pMessage, CEndPoint& endpoint);
+	virtual bool parsePunchTargetAddr(CP2PServer* pServer, const CP2PMessagePtr& ptr, CEndPoint& endpoint);
+
+	static CP2PServerDataSource* createDefaultDataSource() { return new CP2PServerDataSource; }
 };
+
 
 
 class CP2PServer : public CUDPStaticSocket, public CThSfMap<long long, CEndPoint>
@@ -65,7 +66,7 @@ public:
 
 	virtual bool init() override;
 
-	bool sendto(const CEndPoint& endpoint, CP2PMessage* pMessage);
+	bool sendto(const CEndPoint& endpoint, const CP2PMessage* pMessage);
 	bool sendto(const CEndPoint& endpoint, const CP2PMessagePtr& ptr);
 
 	bool send(const std::string& strTarAddr, const std::string& strData);

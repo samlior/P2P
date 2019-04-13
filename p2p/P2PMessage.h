@@ -32,36 +32,34 @@ enum CP2PMessageType
 	P2P_MSG_TYPE_UNKONW
 };
 
-
-class CP2PMessage;
-using CP2PMessagePtr = boost::scoped_ptr<CP2PMessage>;
-
-
-struct CEndPoint;
-
 class CP2PMessage
 {
 public:
+	//通过标准数据包初始化,pData必须符合标准数据包格式
 	CP2PMessage(CP2PMessageType type, char* pData) :m_type(type), m_pData(pData) {}
 	CP2PMessage(const CP2PMessage& message) = delete;
-	~CP2PMessage()
-	{
-		if (m_pData)
-		{
-			delete m_pData;
-			m_pData = nullptr;
-		}
-	}
+	virtual ~CP2PMessage();
 
+	//通过标准数据包生成消息,pData必须符合标准数据包格式
 	static CP2PMessage* createMessageWithSourceData(const char* pData, size_t iLen);
+
+	//通过自定义数据生成消息,内部会按照标准数据包格式生产消息
 	static CP2PMessage* createMessageWithCustomData(CP2PMessageType type, const char* pData, size_t iLen);
 
-	CP2PMessageType getType() { return m_type; }
-	const char* getData() { return m_pData; }
-	const char* getCustomData();
-	size_t getLen() { return m_pData ? strlen(m_pData) : 0; }
+	//获取类型
+	CP2PMessageType getType() const { return m_type; }
+	//获取完整数据
+	const char* getData() const { return m_pData; }
+	//获取完整长度
+	size_t getLen() const { return m_pData ? strlen(m_pData) : 0; }
+	//获取自定义数据
+	const char* getCustomData() const;
+	//获取自定义数据长度
+	size_t getCustomDataLen() const;
 
 protected:
 	CP2PMessageType m_type;
 	char* m_pData;
 };
+
+using CP2PMessagePtr = boost::scoped_ptr<CP2PMessage>;

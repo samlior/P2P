@@ -3,9 +3,7 @@
 #include "P2PMessage.h"
 #include "Utils/ThSfMap.h"
 
-
 class CP2PClient;
-
 
 class CP2PAliveKeeper : public CUDPAliveKeeper, public CThSfMap<long long, CEndPoint>
 {
@@ -15,7 +13,6 @@ public:
 
 	virtual bool run() override;
 };
-
 
 
 
@@ -37,7 +34,6 @@ public:
 
 
 
-
 class CP2PClientDataSource
 {
 public:
@@ -55,20 +51,19 @@ public:
 	virtual CP2PMessage* createDataMessage(CP2PClient* pClient, const CEndPoint& endpoint, const std::string& strData);
 
 	//解析reply消息回调
-	virtual bool parseReplyLoginId(CP2PClient* pClient, CP2PMessage* pMessage, long long& ll);
+	virtual bool parseReplyLoginId(CP2PClient* pClient, const CP2PMessage* pMessage, long long& ll);
 	virtual bool parseReplyLoginId(CP2PClient* pClient, const CP2PMessagePtr& ptr, long long& ll);
 
 	//解析登录成功消息回调
-	virtual bool parseLoginSuccessLoginId(CP2PClient* pClient, CP2PMessage* pMessage, long long& ll);
+	virtual bool parseLoginSuccessLoginId(CP2PClient* pClient, const CP2PMessage* pMessage, long long& ll);
 	virtual bool parseLoginSuccessLoginId(CP2PClient* pClient, const CP2PMessagePtr& ptr, long long& ll);
 
 	//解析来自服务器的punch消息的回调
-	//warnning : it will new a ptr
-	virtual bool parsePunchTargetAddr(CP2PClient* pClient, CP2PMessage* pMessage, CEndPoint*& pEndpoint);
-	virtual bool parsePunchTargetAddr(CP2PClient* pClient, const CP2PMessagePtr& ptr, CEndPoint*& pEndpoint);
+	virtual bool parsePunchTargetAddr(CP2PClient* pClient, const CP2PMessage* pMessage, CEndPoint& endpoint);
+	virtual bool parsePunchTargetAddr(CP2PClient* pClient, const CP2PMessagePtr& ptr, CEndPoint& endpoint);
+
+	static CP2PClientDataSource* createDefaultDataSource() { return new CP2PClientDataSource; }
 };
-
-
 
 
 
@@ -98,7 +93,7 @@ public:
 	virtual bool reset() override;
 	virtual void close() override;
 
-	bool sendto(const CEndPoint& endpoint, CP2PMessage* pMessage);
+	bool sendto(const CEndPoint& endpoint, const CP2PMessage* pMessage);
 	bool sendto(const CEndPoint& endpoint, const CP2PMessagePtr& ptr);
 
 	//接受线程回调函数
@@ -107,9 +102,6 @@ public:
 	//设置代理
 	void setDelegate(CP2PClientDelegate* pDelegate) { m_pDelegate = pDelegate; }
 	CP2PClientDelegate* getDelegate() { return m_pDelegate; }
-
-
-
 
 
 	//发送数据函数
@@ -123,10 +115,6 @@ public:
 
 	//返回ture仅代表打洞请求发送成功,进入delegate的onPunchSuccess方法是才代表打洞成功
 	bool punch(const std::string& strTarAddr);
-
-
-
-
 
 protected:
 	long long m_llLoginId;

@@ -9,9 +9,14 @@
 using namespace std;
 using namespace boost;
 
-
-
-
+CP2PMessage::~CP2PMessage()
+{
+	if (m_pData)
+	{
+		delete m_pData;
+		m_pData = nullptr;
+	}
+}
 
 CP2PMessage* CP2PMessage::createMessageWithSourceData(const char* pData, size_t iLen)
 {
@@ -21,14 +26,7 @@ CP2PMessage* CP2PMessage::createMessageWithSourceData(const char* pData, size_t 
 		char pMsgType[MSG_TYPE_HEADER_LEN] = { 0 };
 		memcpy_s(pMsgType, MSG_TYPE_HEADER_LEN, pData, MSG_TYPE_HEADER_LEN);
 		int iMsgType = atoi(pMsgType);
-		if (iMsgType == P2P_MSG_TYPE_REPLY ||
-			iMsgType == P2P_MSG_TYPE_PUNCH ||
-			iMsgType == P2P_MSG_TYPE_DATA ||
-			iMsgType == P2P_MSG_TYPE_LOGIN ||
-			iMsgType == P2P_MSG_TYPE_LOGIN_SUCCESS ||
-			iMsgType == P2P_MSG_TYPE_LOGOUT ||
-			iMsgType == P2P_MSG_TYPE_PING ||
-			iMsgType == P2P_MSG_TYPE_PONG)
+		if (iMsgType)
 		{
 			char pMsgDataLen[MSG_DATA_LEN_HEADER_LEN] = { 0 };
 			memcpy_s(pMsgDataLen, MSG_DATA_LEN_HEADER_LEN, pData + MSG_TYPE_HEADER_LEN, MSG_DATA_LEN_HEADER_LEN);
@@ -57,7 +55,25 @@ CP2PMessage* CP2PMessage::createMessageWithCustomData(CP2PMessageType type, cons
 	return new CP2PMessage(type, pCustomData);
 }
 
-const char* CP2PMessage::getCustomData()
+size_t CP2PMessage::getCustomDataLen() const
+{
+	size_t len = 0;
+	if (m_pData)
+	{
+		len = strlen(m_pData);
+		if (len >= MSG_HEADER_LEN)
+		{
+			len -= MSG_HEADER_LEN;
+		}
+		else
+		{
+			len = 0;
+		}
+	}
+	return len;
+}
+
+const char* CP2PMessage::getCustomData() const
 {
 	return m_pData && strlen(m_pData) > MSG_HEADER_LEN ? m_pData + MSG_HEADER_LEN : nullptr;
 }

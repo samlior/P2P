@@ -1,10 +1,13 @@
-
-
 #include <iostream>
 #include "P2PClient.h"
+#include <boost/scoped_ptr.hpp>
+
+#define RECV_BUFSIZE	1024
+#define SVR_IP			"100.111.11.101"
+#define SVR_PORT		62000
 
 using namespace std;
-
+using namespace boost;
 
 //通过继承的方式自定义delegate
 class CMyP2PClientDelegate : public CP2PClientDelegate
@@ -28,29 +31,23 @@ public:
 	}
 };
 
-
-
-#define RECV_BUFSIZE 1024
-
 int main()
 {
 	//全局初始化
 	CUDPSocket::startUp();
 
-
 	//创建客户端对象,传入服务器地址及端口
-	CP2PClientDataSource* pDataSource = new CP2PClientDataSource;
-	CMyP2PClientDelegate* pDelegate = new CMyP2PClientDelegate;
-	CP2PClient* pClient = new CP2PClient(pDataSource, "35.121.11.90", 62000);
+	scoped_ptr<CP2PClientDataSource> pDataSource(CP2PClientDataSource::createDefaultDataSource());
+	scoped_ptr<CMyP2PClientDelegate> pDelegate(new CMyP2PClientDelegate);
+	scoped_ptr<CP2PClient> pClient(new CP2PClient(pDataSource.get(), SVR_IP, SVR_PORT));
 	//设置代理
-	pClient->setDelegate(pDelegate);
+	pClient->setDelegate(pDelegate.get());
 	//初始化客户端
 	if (!pClient->init())
 	{
 		cout << "client init failed" << endl;
 		return 0;
 	}
-
 
 	//接收指令
 	char line[RECV_BUFSIZE] = { 0 };
@@ -87,14 +84,6 @@ int main()
 
 		memset(line, 0, RECV_BUFSIZE);
 	}
-	free(line);
-
-	delete pClient;
-	pClient = nullptr;
-	delete pDataSource;
-	pDataSource = nullptr;
-	delete pDelegate;
-	pDelegate = nullptr;
 
 	//释放socket资源
 	CUDPSocket::clearUp();
